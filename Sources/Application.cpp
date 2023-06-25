@@ -20,10 +20,15 @@ Application::Application()
 	this->frame = new Frame(nullptr, wxDefaultPosition, wxSize(800, 800));
 	this->frame->Show();
 
+	if (!this->soundSystem.Initialize())
+		return false;
+
 	return true;
 }
 
 /*virtual*/ int Application::OnExit(void)
 {
+	this->soundSystem.Shutdown();
+
 	return wxApp::OnExit();
 }

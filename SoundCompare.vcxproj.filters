@@ -13,12 +13,18 @@
     <ClInclude Include="Sources\Frame.h">
       <Filter>Sources</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\SoundSystem.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\Application.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Frame.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SoundSystem.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
