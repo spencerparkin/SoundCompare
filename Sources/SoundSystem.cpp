@@ -192,6 +192,31 @@ bool SoundSystem::DeleteSound(int soundHandle)
 	return true;
 }
 
+bool SoundSystem::IsSoundPlaying(int soundHandle)
+{
+	Sound* sound = this->FindSound(soundHandle);
+	if (!sound || !sound->secondaryBuffer)
+		return false;
+
+	DWORD status = 0;
+	if (DS_OK != sound->secondaryBuffer->GetStatus(&status))
+		return false;
+
+	return (status & DSBSTATUS_PLAYING) != 0;
+}
+
+bool SoundSystem::GetSoundDuration(int soundHandle, double& durationSeconds)
+{
+	Sound* sound = this->FindSound(soundHandle);
+	if (!sound || !sound->secondaryBuffer)
+		return false;
+
+	double sampleRate = double(sound->waveFormat.nSamplesPerSec);
+	DWORD bufferSize = sound->bufferDesc.dwBufferBytes;
+	durationSeconds = double(bufferSize) / sampleRate;
+	return true;
+}
+
 /*static*/ double SoundSystem::RandomNumber(double min, double max)
 {
 	double alpha = double(::rand()) / double(RAND_MAX);
@@ -244,6 +269,11 @@ SoundSystem::SoundGenerator::SoundGenerator(double volume)
 {
 }
 
+/*virtual*/ wxString SoundSystem::SoundGenerator::GetDescription() const
+{
+	return "?";
+}
+
 /*virtual*/ double SoundSystem::SoundGenerator::CalcMaxAmplitude(DWORD bufferSize)
 {
 	double maxAmplitude = 0.0;
@@ -291,6 +321,11 @@ SoundSystem::ToneGenerator::ToneGenerator(double frequency, double volume) : Sou
 {
 }
 
+/*virtual*/ wxString SoundSystem::ToneGenerator::GetDescription() const
+{
+	return wxString::Format("Solid tone with frequency %f Hz", this->frequency);
+}
+
 /*virtual*/ double SoundSystem::ToneGenerator::CalcMaxAmplitude(DWORD bufferSize)
 {
 	return 1.0;
@@ -309,6 +344,11 @@ SoundSystem::WhiteNoiseGenerator::WhiteNoiseGenerator(double volume) : SoundGene
 
 /*virtual*/ SoundSystem::WhiteNoiseGenerator::~WhiteNoiseGenerator()
 {
+}
+
+/*virtual*/ wxString SoundSystem::WhiteNoiseGenerator::GetDescription() const
+{
+	return "White noise";
 }
 
 /*virtual*/ double SoundSystem::WhiteNoiseGenerator::CalcMaxAmplitude(DWORD bufferSize)
@@ -365,6 +405,11 @@ SoundSystem::PinkishNoiseGenerator::PinkishNoiseGenerator(double volume) : Multi
 {
 }
 
+/*virtual*/ wxString SoundSystem::PinkishNoiseGenerator::GetDescription() const
+{
+	return "Pinkish noise";
+}
+
 /*virtual*/ void SoundSystem::PinkishNoiseGenerator::GenerateToneParametersArray()
 {
 	this->toneParametersArray.clear();
@@ -388,6 +433,11 @@ SoundSystem::BlueishNoiseGenerator::BlueishNoiseGenerator(double volume) : Multi
 
 /*virtual*/ SoundSystem::BlueishNoiseGenerator::~BlueishNoiseGenerator()
 {
+}
+
+/*virtual*/ wxString SoundSystem::BlueishNoiseGenerator::GetDescription() const
+{
+	return "Blueish noise";
 }
 
 /*virtual*/ void SoundSystem::BlueishNoiseGenerator::GenerateToneParametersArray()

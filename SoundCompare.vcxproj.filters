@@ -16,6 +16,9 @@
     <ClInclude Include="Sources\SoundSystem.h">
       <Filter>Sources</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\SoundListControl.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\Application.cpp">
@@ -25,6 +28,9 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\SoundSystem.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SoundListControl.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

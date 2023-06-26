@@ -3,6 +3,7 @@
 #include <dsound.h>
 #include <map>
 #include <vector>
+#include <wx/string.h>
 
 class SoundSystem
 {
@@ -26,6 +27,7 @@ public:
 		virtual void GenerateSound(unsigned char* buffer, DWORD bufferSize);
 		virtual double CalcMaxAmplitude(DWORD bufferSize);
 		virtual double EvaluateWaveForm(double timeSeconds);
+		virtual wxString GetDescription() const;
 
 		double ByteOffsetToTime(int byteOffset);
 
@@ -41,6 +43,7 @@ public:
 
 		virtual double CalcMaxAmplitude(DWORD bufferSize) override;
 		virtual double EvaluateWaveForm(double timeSeconds) override;
+		virtual wxString GetDescription() const override;
 
 	private:
 		double frequency;
@@ -54,6 +57,7 @@ public:
 
 		virtual double CalcMaxAmplitude(DWORD bufferSize) override;
 		virtual double EvaluateWaveForm(double timeSeconds) override;
+		virtual wxString GetDescription() const override;
 	};
 
 	class MultiToneGenerator : public SoundGenerator
@@ -85,6 +89,7 @@ public:
 		virtual ~PinkishNoiseGenerator();
 
 		virtual void GenerateToneParametersArray() override;
+		virtual wxString GetDescription() const override;
 	};
 
 	class BlueishNoiseGenerator : public MultiToneGenerator
@@ -94,6 +99,7 @@ public:
 		virtual ~BlueishNoiseGenerator();
 
 		virtual void GenerateToneParametersArray() override;
+		virtual wxString GetDescription() const override;
 	};
 
 	bool CreateSound(int durationSeconds, int& soundHandle);
@@ -101,6 +107,8 @@ public:
 	bool StartPlayingSound(int soundHandle);
 	bool StopPlayingSound(int soundHandle);
 	bool DeleteSound(int soundHandle);
+	bool IsSoundPlaying(int soundHandle);
+	bool GetSoundDuration(int soundHandle, double& durationSeconds);
 
 	static double RandomNumber(double min, double max);
 	static double Clamp(double value, double minValue, double maxValue);
