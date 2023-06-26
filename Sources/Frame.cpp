@@ -5,9 +5,18 @@
 #include <wx/sizer.h>
 #include <wx/choicdlg.h>
 #include <wx/numdlg.h>
+#include <wx/toolbar.h>
 
 Frame::Frame(wxWindow* parent, const wxPoint& pos, const wxSize& size) : wxFrame(parent, wxID_ANY, "Sound Compare", pos, size)
 {
+	wxBitmap addBitmap, removeAllBitmap;
+	wxBitmap playBitmap, stopBitmap;
+
+	addBitmap.LoadFile(wxGetCwd() + "/Textures/Add.png", wxBITMAP_TYPE_PNG);
+	removeAllBitmap.LoadFile(wxGetCwd() + "/Textures/RemoveAll.png", wxBITMAP_TYPE_PNG);
+	playBitmap.LoadFile(wxGetCwd() + "/Textures/Play.png", wxBITMAP_TYPE_PNG);
+	stopBitmap.LoadFile(wxGetCwd() + "/Textures/Stop.png", wxBITMAP_TYPE_PNG);
+
 	wxMenu* programMenu = new wxMenu();
 	programMenu->Append(new wxMenuItem(programMenu, ID_AddSound, "Add Sound", "Add a sound to the list."));
 	programMenu->Append(new wxMenuItem(programMenu, ID_RemoveAllSounds, "Remove All Sounds", "Remove all sounds that have been added to the list."));
@@ -25,6 +34,11 @@ Frame::Frame(wxWindow* parent, const wxPoint& pos, const wxSize& size) : wxFrame
 	menuBar->Append(helpMenu, "Help");
 	this->SetMenuBar(menuBar);
 
+	programMenu->FindItem(ID_AddSound)->SetBitmap(addBitmap);
+	programMenu->FindItem(ID_RemoveAllSounds)->SetBitmap(removeAllBitmap);
+	programMenu->FindItem(ID_PlayAllSounds)->SetBitmap(playBitmap);
+	programMenu->FindItem(ID_StopAllSounds)->SetBitmap(stopBitmap);
+
 	this->SetStatusBar(new wxStatusBar(this));
 
 	this->Bind(wxEVT_MENU, &Frame::OnAddSound, this, ID_AddSound);
@@ -33,6 +47,16 @@ Frame::Frame(wxWindow* parent, const wxPoint& pos, const wxSize& size) : wxFrame
 	this->Bind(wxEVT_MENU, &Frame::OnStopAllSounds, this, ID_StopAllSounds);
 	this->Bind(wxEVT_MENU, &Frame::OnAbout, this, ID_About);
 	this->Bind(wxEVT_MENU, &Frame::OnExit, this, ID_Exit);
+
+	wxToolBar* toolBar = this->CreateToolBar();
+
+	toolBar->AddTool(ID_AddSound, "Add sound", addBitmap, "Add a sound to the list.", wxITEM_NORMAL);
+	toolBar->AddTool(ID_RemoveAllSounds, "Remove all sounds", removeAllBitmap, "Remove all sounds from the list.", wxITEM_NORMAL);
+	toolBar->AddSeparator();
+	toolBar->AddTool(ID_PlayAllSounds, "Play all sounds", playBitmap, "Play all the sounds in the list.", wxITEM_NORMAL);
+	toolBar->AddTool(ID_StopAllSounds, "Stop all sounds", stopBitmap, "Stop all sounds in the list from playing.", wxITEM_NORMAL);
+
+	toolBar->Realize();
 
 	this->soundListControl = new SoundListControl(this);
 
@@ -47,7 +71,7 @@ Frame::Frame(wxWindow* parent, const wxPoint& pos, const wxSize& size) : wxFrame
 
 void Frame::OnAddSound(wxCommandEvent& event)
 {
-	wxNumberEntryDialog volumeDialog(this, "What volume?", "Volume:", "Pick Volume", 0, 0, 100);
+	wxNumberEntryDialog volumeDialog(this, "What volume?  (0 -- 100)", "Volume:", "Pick Volume", 0, 0, 100);
 	if (wxID_OK != volumeDialog.ShowModal())
 		return;
 
@@ -67,7 +91,7 @@ void Frame::OnAddSound(wxCommandEvent& event)
 	wxString soundType = soundTypeArray[soundTypeDialog.GetSelection()];
 	if (soundType == "Tone")
 	{
-		wxNumberEntryDialog frequencyDialog(this, "What frequency?", "Frequency:", "Pick Frequency", 250, 250, 8000);
+		wxNumberEntryDialog frequencyDialog(this, "What frequency? (250 -- 8000)", "Frequency:", "Pick Frequency", 250, 250, 8000);
 		if (wxID_OK != frequencyDialog.ShowModal())
 			return;
 
@@ -77,7 +101,7 @@ void Frame::OnAddSound(wxCommandEvent& event)
 		soundGenerator = new SoundSystem::WhiteNoiseGenerator(volume);
 	else if (soundType == "Pinkish noise")
 		soundGenerator = new SoundSystem::PinkishNoiseGenerator(volume);
-	else if (soundType == "Bluish noise")
+	else if (soundType == "Blueish noise")
 		soundGenerator = new SoundSystem::BlueishNoiseGenerator(volume);
 
 	if (soundGenerator)

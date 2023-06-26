@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "Frame.h"
+#include <wx/image.h>
 
 wxIMPLEMENT_APP(Application);
 
@@ -16,6 +17,8 @@ Application::Application()
 {
 	if (!wxApp::OnInit())
 		return false;
+
+	wxInitAllImageHandlers();
 
 	this->frame = new Frame(nullptr, wxDefaultPosition, wxSize(600, 300));
 	this->frame->Show();
