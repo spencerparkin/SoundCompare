@@ -2,6 +2,7 @@
 
 #include <dsound.h>
 #include <map>
+#include <vector>
 
 class SoundSystem
 {
@@ -19,37 +20,80 @@ public:
 	class SoundGenerator
 	{
 	public:
-		SoundGenerator(float volume);
+		SoundGenerator(double volume);
 		virtual ~SoundGenerator();
 
 		virtual void GenerateSound(unsigned char* buffer, DWORD bufferSize);
-		virtual float EvaluateWaveForm(float timeSeconds);
+		virtual double CalcMaxAmplitude(DWORD bufferSize);
+		virtual double EvaluateWaveForm(double timeSeconds);
 
-		float ByteOffsetToTime(int byteOffset);
+		double ByteOffsetToTime(int byteOffset);
 
-		float volume;
+		double volume;
 		const Sound* sound;
 	};
 
 	class ToneGenerator : public SoundGenerator
 	{
 	public:
-		ToneGenerator(float frequency, float volume);
+		ToneGenerator(double frequency, double volume);
 		virtual ~ToneGenerator();
 
-		virtual float EvaluateWaveForm(float timeSeconds) override;
+		virtual double CalcMaxAmplitude(DWORD bufferSize) override;
+		virtual double EvaluateWaveForm(double timeSeconds) override;
 
 	private:
-		float frequency;
+		double frequency;
 	};
 
 	class WhiteNoiseGenerator : public SoundGenerator
 	{
 	public:
-		WhiteNoiseGenerator(float volume);
+		WhiteNoiseGenerator(double volume);
 		virtual ~WhiteNoiseGenerator();
 
-		virtual float EvaluateWaveForm(float timeSeconds) override;
+		virtual double CalcMaxAmplitude(DWORD bufferSize) override;
+		virtual double EvaluateWaveForm(double timeSeconds) override;
+	};
+
+	class MultiToneGenerator : public SoundGenerator
+	{
+	public:
+		MultiToneGenerator(double volume);
+		virtual ~MultiToneGenerator();
+
+		virtual void GenerateSound(unsigned char* buffer, DWORD bufferSize) override;
+		virtual double EvaluateWaveForm(double timeSeconds) override;
+
+	protected:
+		virtual void GenerateToneParametersArray();
+
+		struct ToneParameters
+		{
+			double amplitude;
+			double frequency;
+			double phaseShift;
+		};
+
+		std::vector<ToneParameters> toneParametersArray;
+	};
+
+	class PinkishNoiseGenerator : public MultiToneGenerator
+	{
+	public:
+		PinkishNoiseGenerator(double volume);
+		virtual ~PinkishNoiseGenerator();
+
+		virtual void GenerateToneParametersArray() override;
+	};
+
+	class BlueishNoiseGenerator : public MultiToneGenerator
+	{
+	public:
+		BlueishNoiseGenerator(double volume);
+		virtual ~BlueishNoiseGenerator();
+
+		virtual void GenerateToneParametersArray() override;
 	};
 
 	bool CreateSound(int durationSeconds, int& soundHandle);
@@ -58,8 +102,8 @@ public:
 	bool StopPlayingSound(int soundHandle);
 	bool DeleteSound(int soundHandle);
 
-	static float RandomNumber(float min, float max);
-	static float Clamp(float value, float minValue, float maxValue);
+	static double RandomNumber(double min, double max);
+	static double Clamp(double value, double minValue, double maxValue);
 
 private:
 

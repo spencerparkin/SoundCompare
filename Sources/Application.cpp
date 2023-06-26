@@ -23,18 +23,30 @@ Application::Application()
 	if (!this->soundSystem.Initialize())
 		return false;
 
-	SoundSystem::ToneGenerator toneGenerator(440.0f, 1.0f);
-	SoundSystem::WhiteNoiseGenerator whiteNoiseGenerator(1.0f);
+	//SoundSystem::ToneGenerator toneGenerator(4400.0f, 0.1f);
+	//SoundSystem::WhiteNoiseGenerator whiteNoiseGenerator(0.1f);
 
-	int soundHandleA = 0;
-	this->soundSystem.CreateSound(10, soundHandleA);
-	this->soundSystem.ComposeSound(soundHandleA, &toneGenerator);
-	this->soundSystem.StartPlayingSound(soundHandleA);
+	//int soundHandleA = 0;
+	//this->soundSystem.CreateSound(10, soundHandleA);
+	//this->soundSystem.ComposeSound(soundHandleA, &toneGenerator);
+	//this->soundSystem.StartPlayingSound(soundHandleA);
 
-	int soundHandleB = 0;
-	this->soundSystem.CreateSound(10, soundHandleB);
-	this->soundSystem.ComposeSound(soundHandleB, &whiteNoiseGenerator);
-	this->soundSystem.StartPlayingSound(soundHandleB);
+	//int soundHandleB = 0;
+	//this->soundSystem.CreateSound(10, soundHandleB);
+	//this->soundSystem.ComposeSound(soundHandleB, &whiteNoiseGenerator);
+	//this->soundSystem.StartPlayingSound(soundHandleB);
+
+	/*SoundSystem::PinkishNoiseGenerator pinkNoiseGenerator(0.1f);
+	int soundHandleC = 0;
+	this->soundSystem.CreateSound(10, soundHandleC);
+	this->soundSystem.ComposeSound(soundHandleC, &pinkNoiseGenerator);
+	this->soundSystem.StartPlayingSound(soundHandleC);*/
+
+	SoundSystem::BlueishNoiseGenerator blueNoiseGenerator(0.1f);
+	int soundHandleD = 0;
+	this->soundSystem.CreateSound(4, soundHandleD);
+	this->soundSystem.ComposeSound(soundHandleD, &blueNoiseGenerator);
+	this->soundSystem.StartPlayingSound(soundHandleD);
 
 	return true;
 }

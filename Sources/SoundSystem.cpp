@@ -192,14 +192,14 @@ bool SoundSystem::DeleteSound(int soundHandle)
 	return true;
 }
 
-/*static*/ float SoundSystem::RandomNumber(float min, float max)
+/*static*/ double SoundSystem::RandomNumber(double min, double max)
 {
-	float alpha = float(::rand()) / float(RAND_MAX);
-	float number = min + (max - min) * alpha;
+	double alpha = double(::rand()) / double(RAND_MAX);
+	double number = min + (max - min) * alpha;
 	return Clamp(number, min, max);
 }
 
-/*static*/ float SoundSystem::Clamp(float value, float minValue, float maxValue)
+/*static*/ double SoundSystem::Clamp(double value, double minValue, double maxValue)
 {
 	if (value < minValue)
 		value = minValue;
@@ -234,7 +234,7 @@ SoundSystem::Sound::Sound()
 
 //----------------------------------- SoundSystem::SoundGenerator -----------------------------------
 
-SoundSystem::SoundGenerator::SoundGenerator(float volume)
+SoundSystem::SoundGenerator::SoundGenerator(double volume)
 {
 	this->volume = volume;
 	this->sound = nullptr;
@@ -244,30 +244,45 @@ SoundSystem::SoundGenerator::SoundGenerator(float volume)
 {
 }
 
-/*virtual*/ void SoundSystem::SoundGenerator::GenerateSound(unsigned char* buffer, DWORD bufferSize)
+/*virtual*/ double SoundSystem::SoundGenerator::CalcMaxAmplitude(DWORD bufferSize)
 {
+	double maxAmplitude = 0.0;
+
 	for (int i = 0; i < (signed)bufferSize; i++)
 	{
-		float amplitude = this->EvaluateWaveForm(this->ByteOffsetToTime(i)) * this->volume;
-		amplitude = SoundSystem::Clamp(amplitude, -1.0f, 1.0f);
-		buffer[i] = (unsigned char)(127.0f + amplitude * 127.0f);
+		double amplitude = ::fabs(this->EvaluateWaveForm(this->ByteOffsetToTime(i)));
+		if (amplitude > maxAmplitude)
+			maxAmplitude = amplitude;
+	}
+
+	return maxAmplitude;
+}
+
+/*virtual*/ void SoundSystem::SoundGenerator::GenerateSound(unsigned char* buffer, DWORD bufferSize)
+{
+	double maxAmplitude = this->CalcMaxAmplitude(bufferSize);
+
+	for (int i = 0; i < (signed)bufferSize; i++)
+	{
+		double value = this->EvaluateWaveForm(this->ByteOffsetToTime(i)) * (this->volume / maxAmplitude);
+		buffer[i] = (unsigned char)(127.0 + value * 127.0);
 	}
 }
 
-/*virtual*/ float SoundSystem::SoundGenerator::EvaluateWaveForm(float timeSeconds)
+/*virtual*/ double SoundSystem::SoundGenerator::EvaluateWaveForm(double timeSeconds)
 {
 	return 0.0f;
 }
 
-float SoundSystem::SoundGenerator::ByteOffsetToTime(int byteOffset)
+double SoundSystem::SoundGenerator::ByteOffsetToTime(int byteOffset)
 {
-	float sampleRate = float(this->sound->waveFormat.nSamplesPerSec);
-	return float(byteOffset) / sampleRate;
+	double sampleRate = double(this->sound->waveFormat.nSamplesPerSec);
+	return double(byteOffset) / sampleRate;
 }
 
 //----------------------------------- SoundSystem::ToneGenerator -----------------------------------
 
-SoundSystem::ToneGenerator::ToneGenerator(float frequency, float volume) : SoundGenerator(volume)
+SoundSystem::ToneGenerator::ToneGenerator(double frequency, double volume) : SoundGenerator(volume)
 {
 	this->frequency = frequency;
 }
@@ -276,14 +291,19 @@ SoundSystem::ToneGenerator::ToneGenerator(float frequency, float volume) : Sound
 {
 }
 
-/*virtual*/ float SoundSystem::ToneGenerator::EvaluateWaveForm(float timeSeconds)
+/*virtual*/ double SoundSystem::ToneGenerator::CalcMaxAmplitude(DWORD bufferSize)
 {
-	return sin(2.0f * M_PI * this->frequency * timeSeconds);
+	return 1.0;
+}
+
+/*virtual*/ double SoundSystem::ToneGenerator::EvaluateWaveForm(double timeSeconds)
+{
+	return sin(2.0 * M_PI * this->frequency * timeSeconds);
 }
 
 //----------------------------------- SoundSystem::WhiteNoiseGenerator -----------------------------------
 
-SoundSystem::WhiteNoiseGenerator::WhiteNoiseGenerator(float volume) : SoundGenerator(volume)
+SoundSystem::WhiteNoiseGenerator::WhiteNoiseGenerator(double volume) : SoundGenerator(volume)
 {
 }
 
@@ -291,7 +311,96 @@ SoundSystem::WhiteNoiseGenerator::WhiteNoiseGenerator(float volume) : SoundGener
 {
 }
 
-/*virtual*/ float SoundSystem::WhiteNoiseGenerator::EvaluateWaveForm(float timeSeconds)
+/*virtual*/ double SoundSystem::WhiteNoiseGenerator::CalcMaxAmplitude(DWORD bufferSize)
 {
-	return SoundSystem::RandomNumber(-1.0f, 1.0f);
+	return 1.0;
+}
+
+/*virtual*/ double SoundSystem::WhiteNoiseGenerator::EvaluateWaveForm(double timeSeconds)
+{
+	return SoundSystem::RandomNumber(-1.0, 1.0);
+}
+
+//----------------------------------- SoundSystem::MultiToneGenerator -----------------------------------
+
+SoundSystem::MultiToneGenerator::MultiToneGenerator(double volume) : SoundGenerator(volume)
+{
+}
+
+/*virtual*/ SoundSystem::MultiToneGenerator::~MultiToneGenerator()
+{
+}
+
+/*virtual*/ void SoundSystem::MultiToneGenerator::GenerateSound(unsigned char* buffer, DWORD bufferSize)
+{
+	this->GenerateToneParametersArray();
+
+	SoundGenerator::GenerateSound(buffer, bufferSize);
+}
+
+/*virtual*/ double SoundSystem::MultiToneGenerator::EvaluateWaveForm(double timeSeconds)
+{
+	double totalValue = 0.0;
+
+	for (const ToneParameters& toneParameters : this->toneParametersArray)
+	{
+		double toneValue = toneParameters.amplitude * sin(2.0 * M_PI * toneParameters.frequency * timeSeconds + toneParameters.phaseShift);
+		totalValue += toneValue;
+	}
+
+	return totalValue;
+}
+
+/*virtual*/ void SoundSystem::MultiToneGenerator::GenerateToneParametersArray()
+{
+}
+
+//----------------------------------- SoundSystem::PinkishNoiseGenerator -----------------------------------
+
+SoundSystem::PinkishNoiseGenerator::PinkishNoiseGenerator(double volume) : MultiToneGenerator(volume)
+{
+}
+
+/*virtual*/ SoundSystem::PinkishNoiseGenerator::~PinkishNoiseGenerator()
+{
+}
+
+/*virtual*/ void SoundSystem::PinkishNoiseGenerator::GenerateToneParametersArray()
+{
+	this->toneParametersArray.clear();
+
+	for (int i = 0; i < 100; i++)
+	{
+		ToneParameters toneParameters;
+		toneParameters.frequency = SoundSystem::RandomNumber(250.0, 5000.0);
+		toneParameters.amplitude = 1.0 / toneParameters.frequency;
+		toneParameters.phaseShift = SoundSystem::RandomNumber(0.0, 2.0 * M_PI);
+
+		this->toneParametersArray.push_back(toneParameters);
+	}
+}
+
+//----------------------------------- SoundSystem::BlueishNoiseGenerator -----------------------------------
+
+SoundSystem::BlueishNoiseGenerator::BlueishNoiseGenerator(double volume) : MultiToneGenerator(volume)
+{
+}
+
+/*virtual*/ SoundSystem::BlueishNoiseGenerator::~BlueishNoiseGenerator()
+{
+}
+
+/*virtual*/ void SoundSystem::BlueishNoiseGenerator::GenerateToneParametersArray()
+{
+	this->toneParametersArray.clear();
+
+	for (int i = 0; i < 500; i++)
+	{
+		ToneParameters toneParameters;
+		toneParameters.frequency = SoundSystem::RandomNumber(250.0, 5000.0);
+		toneParameters.amplitude = toneParameters.frequency / 5000.0;
+		toneParameters.phaseShift = SoundSystem::RandomNumber(0.0, 2.0 * M_PI);
+
+		this->toneParametersArray.push_back(toneParameters);
+	}
 }
