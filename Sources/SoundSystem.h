@@ -22,9 +22,13 @@ public:
 		SoundGenerator(float volume);
 		virtual ~SoundGenerator();
 
-		virtual void GenerateSound(const Sound* sound, unsigned char* buffer, DWORD bufferSize) = 0;
+		virtual void GenerateSound(unsigned char* buffer, DWORD bufferSize);
+		virtual float EvaluateWaveForm(float timeSeconds);
+
+		float ByteOffsetToTime(int byteOffset);
 
 		float volume;
+		const Sound* sound;
 	};
 
 	class ToneGenerator : public SoundGenerator
@@ -33,19 +37,19 @@ public:
 		ToneGenerator(float frequency, float volume);
 		virtual ~ToneGenerator();
 
-		virtual void GenerateSound(const Sound* sound, unsigned char* buffer, DWORD bufferSize) override;
+		virtual float EvaluateWaveForm(float timeSeconds) override;
 
 	private:
 		float frequency;
 	};
 
-	class ColorNoiseGenerator : public SoundGenerator
+	class WhiteNoiseGenerator : public SoundGenerator
 	{
 	public:
-		ColorNoiseGenerator(float volume);
-		virtual ~ColorNoiseGenerator();
+		WhiteNoiseGenerator(float volume);
+		virtual ~WhiteNoiseGenerator();
 
-		virtual void GenerateSound(const Sound* sound, unsigned char* buffer, DWORD bufferSize) override;
+		virtual float EvaluateWaveForm(float timeSeconds) override;
 	};
 
 	bool CreateSound(int durationSeconds, int& soundHandle);
@@ -55,6 +59,7 @@ public:
 	bool DeleteSound(int soundHandle);
 
 	static float RandomNumber(float min, float max);
+	static float Clamp(float value, float minValue, float maxValue);
 
 private:
 

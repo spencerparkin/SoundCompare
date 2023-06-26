@@ -23,17 +23,17 @@ Application::Application()
 	if (!this->soundSystem.Initialize())
 		return false;
 
-	SoundSystem::ToneGenerator toneGeneratorA(440.0f, 1.0f);
-	SoundSystem::ColorNoiseGenerator colorNoiseGenerator(1.0f);
+	SoundSystem::ToneGenerator toneGenerator(440.0f, 1.0f);
+	SoundSystem::WhiteNoiseGenerator whiteNoiseGenerator(1.0f);
 
 	int soundHandleA = 0;
 	this->soundSystem.CreateSound(10, soundHandleA);
-	this->soundSystem.ComposeSound(soundHandleA, &toneGeneratorA);
+	this->soundSystem.ComposeSound(soundHandleA, &toneGenerator);
 	this->soundSystem.StartPlayingSound(soundHandleA);
 
 	int soundHandleB = 0;
 	this->soundSystem.CreateSound(10, soundHandleB);
-	this->soundSystem.ComposeSound(soundHandleB, &colorNoiseGenerator);
+	this->soundSystem.ComposeSound(soundHandleB, &whiteNoiseGenerator);
 	this->soundSystem.StartPlayingSound(soundHandleB);
 
 	return true;

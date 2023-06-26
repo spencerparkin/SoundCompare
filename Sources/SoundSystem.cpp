@@ -141,7 +141,8 @@ bool SoundSystem::ComposeSound(int soundHandle, SoundGenerator* soundGenerator)
 	if (result != DS_OK)
 		return false;
 
-	soundGenerator->GenerateSound(sound, buffer, bufferSize);
+	soundGenerator->sound = sound;
+	soundGenerator->GenerateSound(buffer, bufferSize);
 
 	sound->secondaryBuffer->Unlock(buffer, bufferSize, nullptr, 0);
 	return true;
@@ -195,11 +196,18 @@ bool SoundSystem::DeleteSound(int soundHandle)
 {
 	float alpha = float(::rand()) / float(RAND_MAX);
 	float number = min + (max - min) * alpha;
-	if (number < min)
-		number = min;
-	if (number > max)
-		number = max;
-	return number;
+	return Clamp(number, min, max);
+}
+
+/*static*/ float SoundSystem::Clamp(float value, float minValue, float maxValue)
+{
+	if (value < minValue)
+		value = minValue;
+
+	if (value > maxValue)
+		value = maxValue;
+
+	return value;
 }
 
 SoundSystem::Sound* SoundSystem::FindSound(int soundHandle)
@@ -229,10 +237,32 @@ SoundSystem::Sound::Sound()
 SoundSystem::SoundGenerator::SoundGenerator(float volume)
 {
 	this->volume = volume;
+	this->sound = nullptr;
 }
 
 /*virtual*/ SoundSystem::SoundGenerator::~SoundGenerator()
 {
+}
+
+/*virtual*/ void SoundSystem::SoundGenerator::GenerateSound(unsigned char* buffer, DWORD bufferSize)
+{
+	for (int i = 0; i < (signed)bufferSize; i++)
+	{
+		float amplitude = this->EvaluateWaveForm(this->ByteOffsetToTime(i)) * this->volume;
+		amplitude = SoundSystem::Clamp(amplitude, -1.0f, 1.0f);
+		buffer[i] = (unsigned char)(127.0f + amplitude * 127.0f);
+	}
+}
+
+/*virtual*/ float SoundSystem::SoundGenerator::EvaluateWaveForm(float timeSeconds)
+{
+	return 0.0f;
+}
+
+float SoundSystem::SoundGenerator::ByteOffsetToTime(int byteOffset)
+{
+	float sampleRate = float(this->sound->waveFormat.nSamplesPerSec);
+	return float(byteOffset) / sampleRate;
 }
 
 //----------------------------------- SoundSystem::ToneGenerator -----------------------------------
@@ -246,35 +276,22 @@ SoundSystem::ToneGenerator::ToneGenerator(float frequency, float volume) : Sound
 {
 }
 
-/*virtual*/ void SoundSystem::ToneGenerator::GenerateSound(const Sound* sound, unsigned char* buffer, DWORD bufferSize)
+/*virtual*/ float SoundSystem::ToneGenerator::EvaluateWaveForm(float timeSeconds)
 {
-	for (int i = 0; i < (signed)bufferSize; i++)
-	{
-		float sampleRate = (float)sound->waveFormat.nSamplesPerSec;
-		float pos = float(i) * this->frequency / sampleRate;
-		float angle = (pos - floor(pos)) * 2.0 * M_PI;
-		float value = sin(angle) * this->volume;
-
-		buffer[i] = (unsigned char)(127.0f + value * 127.0f);
-	}
+	return sin(2.0f * M_PI * this->frequency * timeSeconds);
 }
 
-//----------------------------------- SoundSystem::ColorNoiseGenerator -----------------------------------
+//----------------------------------- SoundSystem::WhiteNoiseGenerator -----------------------------------
 
-SoundSystem::ColorNoiseGenerator::ColorNoiseGenerator(float volume) : SoundGenerator(volume)
+SoundSystem::WhiteNoiseGenerator::WhiteNoiseGenerator(float volume) : SoundGenerator(volume)
 {
 }
 
-/*virtual*/ SoundSystem::ColorNoiseGenerator::~ColorNoiseGenerator()
+/*virtual*/ SoundSystem::WhiteNoiseGenerator::~WhiteNoiseGenerator()
 {
 }
 
-/*virtual*/ void SoundSystem::ColorNoiseGenerator::GenerateSound(const Sound* sound, unsigned char* buffer, DWORD bufferSize)
+/*virtual*/ float SoundSystem::WhiteNoiseGenerator::EvaluateWaveForm(float timeSeconds)
 {
-	// This is white noise, I think.  What about pink or other colors?
-	for (int i = 0; i < (signed)bufferSize; i++)
-	{
-		float value = SoundSystem::RandomNumber(-1.0f, 1.0f) * this->volume;
-		buffer[i] = (unsigned char)(127.0f + value * 127.0f);
-	}
+	return SoundSystem::RandomNumber(-1.0f, 1.0f);
 }
