@@ -19,6 +19,18 @@ public:
 
 private:
 
+	enum
+	{
+		ID_PlaySound = wxID_HIGHEST + 500,
+		ID_StopSound,
+		ID_RemoveSound
+	};
+
+	void OnRightClickItem(wxListEvent& event);
+	void OnPlaySound(wxCommandEvent& event);
+	void OnStopSound(wxCommandEvent& event);
+	void OnRemoveSound(wxCommandEvent& event);
+
 	class SoundEntry
 	{
 	public:
@@ -28,6 +40,9 @@ private:
 		int soundHandle;
 		SoundSystem::SoundGenerator* soundGenerator;
 	};
+
+	SoundEntry* GetSelectedEntry();
+	void SetSelectedEntry();
 
 	std::vector<SoundEntry*> soundArray;
 };

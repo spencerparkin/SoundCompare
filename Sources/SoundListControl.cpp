@@ -1,6 +1,7 @@
 #include "SoundListControl.h"
 #include "Application.h"
 #include <wx/utils.h>
+#include <wx/menu.h>
 
 //----------------------------------- SoundListControl -----------------------------------
 
@@ -10,6 +11,8 @@ SoundListControl::SoundListControl(wxWindow* parent) : wxListCtrl(parent, wxID_A
 	this->AppendColumn("Description");
 	this->AppendColumn("Status");
 	this->AppendColumn("Duration");
+
+	this->Bind(wxEVT_LIST_ITEM_RIGHT_CLICK, &SoundListControl::OnRightClickItem, this);
 }
 
 /*virtual*/ SoundListControl::~SoundListControl()
@@ -22,7 +25,7 @@ SoundListControl::SoundListControl(wxWindow* parent) : wxListCtrl(parent, wxID_A
 	if (0 <= item && item < (signed)this->soundArray.size())
 	{
 		SoundEntry* entry = this->soundArray[item];
-		
+
 		switch (column)
 		{
 			case 0:
@@ -47,6 +50,81 @@ SoundListControl::SoundListControl(wxWindow* parent) : wxListCtrl(parent, wxID_A
 	}
 
 	return "?";
+}
+
+void SoundListControl::OnRightClickItem(wxListEvent& event)
+{
+	wxMenu contextMenu;
+
+	contextMenu.Append(new wxMenuItem(&contextMenu, ID_PlaySound, "Play Sound", "Play the selected sound."));
+	contextMenu.Append(new wxMenuItem(&contextMenu, ID_StopSound, "Stop Sound", "Stop the selected sound."));
+	contextMenu.AppendSeparator();
+	contextMenu.Append(new wxMenuItem(&contextMenu, ID_RemoveSound, "Remove Sound", "Remove the selected sound from the list."));
+
+	contextMenu.Bind(wxEVT_MENU, &SoundListControl::OnPlaySound, this, ID_PlaySound);
+	contextMenu.Bind(wxEVT_MENU, &SoundListControl::OnStopSound, this, ID_StopSound);
+	contextMenu.Bind(wxEVT_MENU, &SoundListControl::OnRemoveSound, this, ID_RemoveSound);
+
+	this->PopupMenu(&contextMenu);
+}
+
+SoundListControl::SoundEntry* SoundListControl::GetSelectedEntry()
+{
+	long selectedItem = this->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	if (selectedItem < 0)
+		return nullptr;
+
+	if (selectedItem >= (signed)this->soundArray.size())
+		return nullptr;
+
+	SoundEntry* entry = this->soundArray[selectedItem];
+	return entry;
+}
+
+void SoundListControl::OnPlaySound(wxCommandEvent& event)
+{
+	SoundEntry* entry = this->GetSelectedEntry();
+	if (entry)
+	{
+		SoundSystem* soundSystem = wxGetApp().GetSoundSystem();
+		if (!soundSystem->IsSoundPlaying(entry->soundHandle))
+			soundSystem->StartPlayingSound(entry->soundHandle);
+
+		this->Refresh();
+	}
+}
+
+void SoundListControl::OnStopSound(wxCommandEvent& event)
+{
+	SoundEntry* entry = this->GetSelectedEntry();
+	if (entry)
+	{
+		SoundSystem* soundSystem = wxGetApp().GetSoundSystem();
+		if (soundSystem->IsSoundPlaying(entry->soundHandle))
+			soundSystem->StopPlayingSound(entry->soundHandle);
+
+		this->Refresh();
+	}
+}
+
+void SoundListControl::OnRemoveSound(wxCommandEvent& event)
+{
+	SoundEntry* entry = this->GetSelectedEntry();
+	if (entry)
+	{
+		SoundSystem* soundSystem = wxGetApp().GetSoundSystem();
+		
+		for (int i = 0; i < (signed)this->soundArray.size(); i++)
+		{
+			if (this->soundArray[i] == entry)
+			{
+				delete entry;
+				this->soundArray.erase(this->soundArray.begin() + i);
+				this->SetItemCount(this->soundArray.size());
+				break;
+			}
+		}
+	}
 }
 
 void SoundListControl::AddSound(SoundSystem::SoundGenerator* soundGenerator)
