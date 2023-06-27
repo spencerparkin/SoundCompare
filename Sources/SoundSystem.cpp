@@ -414,10 +414,10 @@ SoundSystem::PinkishNoiseGenerator::PinkishNoiseGenerator(double volume) : Multi
 {
 	this->toneParametersArray.clear();
 
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 500; i++)
 	{
 		ToneParameters toneParameters;
-		toneParameters.frequency = SoundSystem::RandomNumber(250.0, 5000.0);
+		toneParameters.frequency = SoundSystem::RandomNumber(250.0, 8000.0);
 		toneParameters.amplitude = 1.0 / toneParameters.frequency;
 		toneParameters.phaseShift = SoundSystem::RandomNumber(0.0, 2.0 * M_PI);
 
@@ -447,8 +447,8 @@ SoundSystem::BlueishNoiseGenerator::BlueishNoiseGenerator(double volume) : Multi
 	for (int i = 0; i < 500; i++)
 	{
 		ToneParameters toneParameters;
-		toneParameters.frequency = SoundSystem::RandomNumber(250.0, 5000.0);
-		toneParameters.amplitude = toneParameters.frequency / 5000.0;
+		toneParameters.frequency = SoundSystem::RandomNumber(250.0, 8000.0);
+		toneParameters.amplitude = toneParameters.frequency / 8000.0;
 		toneParameters.phaseShift = SoundSystem::RandomNumber(0.0, 2.0 * M_PI);
 
 		this->toneParametersArray.push_back(toneParameters);
